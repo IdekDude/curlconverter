@@ -1378,7 +1378,7 @@ function joinArgs(args: string[]) {
   return s + ")";
 }
 
-function requestToPython(
+function requestToPythonScrapy(
   request: Request,
   warnings: Warnings = [],
   imports: Set<string>,
@@ -1461,7 +1461,7 @@ function requestToPython(
       // https://github.com/curl/curl/blob/curl-7_86_0/lib/url.c#L2418-L2419
       proxy = proxy.replace("socks", "socks4");
     }
-    proxyDict = "proxies = {\n";
+    proxyDict = `meta = {"proxy": \n`;
     proxyDict += "    'http': " + repr(proxy, osVars, imports) + ",\n";
     // TODO: if (protocol !== "http") { ?
     proxyDict += "    'https': " + repr(proxy, osVars, imports) + ",\n";
@@ -1535,7 +1535,10 @@ function requestToPython(
   let jsonDataString;
   let filesString;
   let shouldEncode;
-  if (request.urls[0].uploadFile && request.urls.length === 1) {
+  /*
+    Unfortunately scrapy does not appear to support file uploads. This feature will be deprecated.
+
+    if (request.urls[0].uploadFile && request.urls.length === 1) {
     // TODO: https://docs.python-requests.org/en/latest/user/advanced/#streaming-uploads
     if (
       eq(request.urls[0].uploadFile, "-") ||
@@ -1550,7 +1553,9 @@ function requestToPython(
         ", 'rb') as f:\n";
       dataString += "    data = f.read()\n";
     }
-  } else if (request.data && !request.data.isEmpty()) {
+  }
+  */
+  if (request.data && !request.data.isEmpty()) {
     // !isEmpty() because passing data='' is the same as not passing data=
     // We need to set the Content-Type header in headers= and not set data=
     let dataImports: Set<string>;
@@ -1772,7 +1777,7 @@ function requestToPython(
     if (headerDict) {
       args.push("headers=headers");
     }
-    if (urlObj.uploadFile) {
+/*     if (urlObj.uploadFile) {
       if (request.urls.length > 1) {
         // If there's more than one URL we could have --data for all
         // of them and --upload-file for just one of them and we can't
@@ -1781,14 +1786,13 @@ function requestToPython(
       } else {
         args.push("data=data");
       }
-    } else if (request.data && !request.data.isEmpty()) {
+    }  */
+    if (request.data && !request.data.isEmpty()) {
       if (jsonDataString) {
-        args.push("json=json_data");
+        args.push("body=json_data");
       } else {
         args.push("data=data" + (shouldEncode ? ".encode()" : ""));
       }
-    } else if (filesString) {
-      args.push("files=files");
     }
     if (proxyDict) {
       args.push("proxies=proxies");
@@ -1959,7 +1963,7 @@ function requestToPython(
         requestLine += indent(urlParamsStr, indentLevel);
       }
 
-      if (urlObj.uploadFile) {
+/*       if (urlObj.uploadFile) {
         let uploadFileLine = "";
         // TODO: https://docs.python-requests.org/en/latest/user/advanced/#streaming-uploads
         if (eq(urlObj.uploadFile, "-") || eq(urlObj.uploadFile, ".")) {
@@ -1973,7 +1977,7 @@ function requestToPython(
           uploadFileLine += "    file_contents = f.read()\n";
         }
         requestLine += indent(uploadFileLine, indentLevel);
-      }
+      } */
     }
 
     const fnToCall =
@@ -1985,7 +1989,7 @@ function requestToPython(
       requestLine += isSession || request.urls.length > 1 ? "" : "\n";
 
       // Should never be -1
-      args[args.indexOf("json=json_data")] = shouldEncode
+      args[args.indexOf("body=json_data")] = shouldEncode
         ? "data=data.encode()"
         : "data=data";
       let dataAlternative =
@@ -2081,7 +2085,7 @@ function printImports(imps: Set<string>): string {
   return s;
 }
 
-export function _toPython(
+export function _toPythonScrapy(
   requests: Request[],
   warnings: Warnings = []
 ): string {
@@ -2090,7 +2094,7 @@ export function _toPython(
   const imports = new Set<string>();
   const thirdPartyImports = new Set<string>();
   for (const request of requests) {
-    const requestCode = requestToPython(
+    const requestCode = requestToPythonScrapy(
       request,
       warnings,
       imports,
@@ -2119,15 +2123,15 @@ export function _toPython(
   return importCode + code.join(joinTwoLines ? "\n\n" : "\n");
 }
 
-export function toPythonWarn(
+export function toPythonScrapyWarn(
   curlCommand: string | string[],
   warnings: Warnings = []
 ): [string, Warnings] {
   const requests = parseCurlCommand(curlCommand, supportedArgs, warnings);
-  const python = _toPython(requests, warnings);
+  const python = _toPythonScrapy(requests, warnings);
   return [python, warnings];
 }
 
-export function toPython(curlCommand: string | string[]): string {
-  return toPythonWarn(curlCommand)[0];
+export function toPythonScrapy(curlCommand: string | string[]): string {
+  return toPythonScrapyWarn(curlCommand)[0];
 }
