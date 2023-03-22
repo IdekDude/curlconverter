@@ -39,7 +39,8 @@ import {
   _toPhpRequests,
   toPhpRequestsWarn,
 } from "./generators/php/requests.js";
-import { _toPython, toPythonWarn } from "./generators/python.js";
+import { _toPythonRequest, toPythonRequestWarn } from "./generators/python/request.js";
+import { _toPythonScrapy, toPythonScrapyWarn } from "./generators/python/scrapy";
 import { _toR, toRWarn } from "./generators/r.js";
 import { _toRuby, toRubyWarn } from "./generators/ruby.js";
 import { _toRust, toRustWarn } from "./generators/rust.js";
@@ -92,7 +93,8 @@ const translate: {
   "nodejs-request": [_toNodeRequest, toNodeRequestWarn], // undocumented alias
   php: [_toPhp, toPhpWarn],
   "php-requests": [_toPhpRequests, toPhpRequestsWarn],
-  python: [_toPython, toPythonWarn],
+  "python-request": [_toPythonRequest, toPythonRequestWarn],
+  "python-scrapy": [_toPythonScrapy, toPythonScrapyWarn],
   r: [_toR, toRWarn],
   ruby: [_toRuby, toRubyWarn],
   rust: [_toRust, toRustWarn],

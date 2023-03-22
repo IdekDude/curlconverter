@@ -22,7 +22,8 @@ export {
 } from "./generators/javascript/request.js";
 export { toPhp, toPhpWarn } from "./generators/php/php.js";
 export { toPhpRequests, toPhpRequestsWarn } from "./generators/php/requests.js";
-export { toPython, toPythonWarn } from "./generators/python.js";
+export { toPythonRequest, PythonRequestWarn } from "./generators/python/request.js";
+export { toPythonScrapy, PythonScrapyWarn } from "./generators/python/scrapy.js";
 export { toR, toRWarn } from "./generators/r.js";
 export { toRuby, toRubyWarn } from "./generators/ruby.js";
 export { toRust, toRustWarn } from "./generators/rust.js";
